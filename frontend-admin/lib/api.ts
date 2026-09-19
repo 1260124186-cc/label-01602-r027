@@ -286,6 +286,71 @@ export const listingApi = {
 };
 
 /**
+ * 账号资料相关 API
+ */
+export const accountApi = {
+  /**
+   * 下载本人资料包（投稿与审核经历）
+   * 返回的是导出时刻生成的静态快照文件，由浏览器直接保存到本地
+   */
+  downloadDataExport: async (): Promise<{ success: true; filename: string } | { success: false; error: string }> => {
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}/api/me/data-export`;
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: buildHeaders(),
+      });
+    } catch (error) {
+      console.error('Data export request error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '网络错误',
+      };
+    }
+
+    if (!response.ok) {
+      // 错误响应仍是 JSON，尝试解析出错误信息
+      try {
+        const data = await response.json();
+        return { success: false, error: data.error || data.message || '资料包导出失败' };
+      } catch {
+        return { success: false, error: '资料包导出失败' };
+      }
+    }
+
+    const blob = await response.blob();
+
+    // 从 Content-Disposition 解析文件名（优先 filename* 的 UTF-8 名称）
+    let filename = '我的投稿与审核记录.json';
+    const disposition = response.headers.get('Content-Disposition');
+    if (disposition) {
+      const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+      const asciiMatch = disposition.match(/filename="([^"]+)"/i);
+      if (utf8Match?.[1]) {
+        filename = decodeURIComponent(utf8Match[1]);
+      } else if (asciiMatch?.[1]) {
+        filename = asciiMatch[1];
+      }
+    }
+
+    // 触发浏览器下载；下载到本地后即为不可变快照
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
+
+    return { success: true, filename };
+  },
+};
+
+/**
  * 管理员相关 API
  */
 export const adminApi = {
