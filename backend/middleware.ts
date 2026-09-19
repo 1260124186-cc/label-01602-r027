@@ -26,6 +26,8 @@ export function middleware(request: NextRequest) {
   response.headers.set('Access-Control-Allow-Origin', '*');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // 允许前端读取下载文件名（资料包导出）
+  response.headers.set('Access-Control-Expose-Headers', 'Content-Disposition');
 
   return response;
 }

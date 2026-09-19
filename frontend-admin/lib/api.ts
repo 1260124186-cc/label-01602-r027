@@ -277,6 +277,43 @@ export const listingApi = {
   
   /** 获取我的房源 */
   getMy: () => get<Listing[]>('/api/listings/my'),
+
+  /** 导出我的房源资料包（触发浏览器下载） */
+  exportMy: async (): Promise<ApiResponse<void>> => {
+    const baseUrl = getApiBaseUrl();
+
+    try {
+      const response = await fetch(`${baseUrl}/api/listings/my/export`, {
+        method: 'GET',
+        headers: buildHeaders(),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        return { success: false, error: data.error || '导出资料包失败' };
+      }
+
+      // 从响应头解析后端生成的文件名（含快照时间点）
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      const filename = match?.[1] || 'my-listings-export.json';
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Export download error:', error);
+      return { success: false, error: '网络错误' };
+    }
+  },
   
   /** 更新房源 */
   update: (id: string, data: UpdateListingRequest) => put<Listing>(`/api/listings/${id}`, data),

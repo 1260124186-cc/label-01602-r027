@@ -83,6 +83,7 @@ erDiagram
 | GET | /api/listings/[id] | 获取房源详情 | 公开(仅审核通过) |
 | POST | /api/listings | 创建房源 | 登录用户 |
 | GET | /api/listings/my | 获取我的房源 | 登录用户 |
+| GET | /api/listings/my/export | 导出我的投稿与审核记录资料包（含快照时间点，仅本人数据） | 登录用户 |
 | PUT | /api/listings/[id] | 更新房源 | 房源所有者 |
 | DELETE | /api/listings/[id] | 删除房源 | 房源所有者/管理员 |
 
